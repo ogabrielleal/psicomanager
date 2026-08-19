@@ -1,0 +1,3 @@
+<?php
+declare(strict_types=1);
+$root=dirname(__DIR__);$code=file_get_contents($root.'/app/Core/SecurityHeaders.php')?:'';$required=['Strict-Transport-Security','Content-Security-Policy','X-Content-Type-Options','X-Frame-Options','Referrer-Policy','Permissions-Policy'];$missing=[];foreach($required as $h)if(!str_contains($code,$h))$missing[]=$h;if($missing){fwrite(STDERR,'[FAIL] Headers ausentes: '.implode(', ',$missing).PHP_EOL);exit(1);}if(str_contains($code,"script-src 'self' 'unsafe-inline'")){fwrite(STDERR,"[FAIL] CSP permite unsafe-inline para scripts.\n");exit(1);}echo "[OK] Security headers e CSP mínima presentes.\n";

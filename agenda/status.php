@@ -1,0 +1,9 @@
+<?php
+declare(strict_types=1);
+require dirname(__DIR__).'/app/bootstrap.php';
+$user=require_permission('agenda.manage');\App\Core\Tenant::enforceActive((int)$user['tenant_id']);
+if($_SERVER['REQUEST_METHOD']!=='POST')redirect('agenda/index.php');verify_csrf();
+$id=(int)($_POST['id']??0);$status=$_POST['status']??'';if(!in_array($status,['pending','confirmed','completed','cancelled','no_show'],true))redirect('agenda/index.php');
+$sql="SELECT * FROM appointments WHERE id=:id AND tenant_id=:t";$p=['id'=>$id,'t'=>$user['tenant_id']];if(in_array($user['role_slug'],['psychologist','supervised'],true)){$sql.=' AND professional_id=:u';$p['u']=$user['id'];}$st=db()->prepare($sql);$st->execute($p);$a=$st->fetch();if(!$a){http_response_code(404);exit('Atendimento não localizado.');}
+db()->beginTransaction();try{db()->prepare("UPDATE appointments SET status=:s,updated_at=NOW() WHERE id=:id AND tenant_id=:t")->execute(['s'=>$status,'id'=>$id,'t'=>$user['tenant_id']]);if($status==='completed'&&(float)($a['fee']??0)>0){$st=db()->prepare("INSERT IGNORE INTO financial_transactions(tenant_id,patient_id,appointment_id,professional_id,created_by,type,category,description,amount,due_date,status,created_at,updated_at) VALUES(:t,:p,:a,:prof,:u,'income','Sessão','Sessão clínica',:amount,CURDATE(),'pending',NOW(),NOW())");$st->execute(['t'=>$user['tenant_id'],'p'=>$a['patient_id'],'a'=>$id,'prof'=>$a['professional_id'],'u'=>$user['id'],'amount'=>$a['fee']]);}db()->commit();audit('appointment.status','appointment',$id,['status'=>$status]);flash('success','Status atualizado.'.($status==='completed'&&(float)($a['fee']??0)>0?' Cobrança pendente criada no financeiro.':''));}catch(Throwable $e){if(db()->inTransaction())db()->rollBack();flash('error','Não foi possível atualizar o atendimento.');}
+redirect('agenda/index.php');

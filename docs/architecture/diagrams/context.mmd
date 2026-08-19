@@ -1,0 +1,7 @@
+flowchart LR
+  Browser[Browser] --> Edge[WAF / TLS]
+  Edge --> Apache[Apache Hostoo]
+  Apache --> PHP[PsicoManager PHP 8.5]
+  PHP --> MySQL[(MySQL remoto)]
+  PHP --> Gemini[IA externa - opcional]
+  PHP --> WhatsApp[Webhook WhatsApp - opcional]

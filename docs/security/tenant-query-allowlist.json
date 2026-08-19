@@ -1,0 +1,9 @@
+[
+  {"file":"app/Core/Auth.php","reason":"Login global por e-mail antes de o tenant estar resolvido; tenant_id é obtido da própria conta autenticada."},
+  {"file":"portal/login.php","reason":"Login global do portal antes de resolver tenant; e-mail é globalmente único e tenant vem da credencial encontrada."},
+  {"file":"confirm.php","reason":"Fluxo público por public_token criptograficamente aleatório; joins validam tenant entre appointment/patient/user."},
+  {"file":"validate.php","reason":"Validação pública por validation_token aleatório e sem exposição de dados clínicos/paciente."},
+  {"file":"cron/reminders.php","reason":"Worker interno bloqueado na borda; processa fila global e carrega tenant_id de cada item."},
+  {"file":"saas/index.php","reason":"Painel SaaS global deliberado, autenticado como administrador do serviço e sem leitura de conteúdo clínico."},
+  {"file":"app/Core/FeatureFlags.php","reason":"Fallback de feature flags é consultado após tenant_id explícito no método."}
+]

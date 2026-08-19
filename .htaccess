@@ -1,0 +1,26 @@
+Options -Indexes
+ServerSignature Off
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteCond %{HTTPS} !=on
+RewriteCond %{HTTP_HOST} !^(localhost|127\.0\.0\.1)(:\d+)?$ [NC]
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+RewriteRule (^|/)\.(?!well-known/) - [F,L]
+RewriteRule ^(?:app|config|database|storage|docs|cron|tests|scripts)/ - [F,L,NC]
+RewriteRule ^(?:composer\.(?:json|lock)|README\.md|SECURITY\.md|DEPLOY-HOSTOO\.md|CHANGELOG\.md|QA\.md)$ - [F,L,NC]
+</IfModule>
+
+<IfModule mod_headers.c>
+Header always set X-Content-Type-Options "nosniff"
+Header always set X-Frame-Options "DENY"
+Header always set Referrer-Policy "strict-origin-when-cross-origin"
+Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+Header always set X-Permitted-Cross-Domain-Policies "none"
+Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains" env=HTTPS
+</IfModule>
+
+<FilesMatch "(^\.env|\.sql$|\.log$|\.lock$|\.sh$|\.ya?ml$)">
+    Require all denied
+</FilesMatch>

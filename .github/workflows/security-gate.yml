@@ -1,0 +1,16 @@
+name: Security Gate
+on:
+  push:
+  pull_request:
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: mbstring, openssl, pdo_mysql, curl
+      - name: Run DevSecOps gate
+        run: bash scripts/security-audit.sh

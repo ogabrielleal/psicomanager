@@ -1,0 +1,6 @@
+PsicoManager AI v0.2.0
+PHP 8.5 + MySQL remoto + Hostoo
+
+Nova instalação: leia README.md e DEPLOY-HOSTOO.md.
+Atualização v0.1.x: leia MIGRATION-v0.2.0.md e LEIA-ME-ATUALIZACAO-0.2.0.txt.
+Arquitetura/DevSecOps: docs/12-PILARES-DEVSECOPS.md.

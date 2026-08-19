@@ -1,0 +1,2 @@
+<?php
+declare(strict_types=1);require dirname(__DIR__).'/app/bootstrap.php';require __DIR__.'/_auth.php';$p=portal_require();if($_SERVER['REQUEST_METHOD']==='POST'){verify_csrf();$id=(int)($_POST['id']??0);db()->prepare("UPDATE therapeutic_tasks SET status='done',updated_at=NOW() WHERE id=:id AND tenant_id=:t AND patient_id=:p")->execute(['id'=>$id,'t'=>$p['tenant_id'],'p'=>$p['id']]);}redirect('portal/index.php');

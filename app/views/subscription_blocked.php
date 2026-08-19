@@ -1,0 +1,3 @@
+<!doctype html><html lang="pt-BR"><meta charset="utf-8"><title>Assinatura</title>
+<style>body{font-family:system-ui;margin:0;display:grid;place-items:center;min-height:100vh;background:#f7f9fc;color:#162033}.box{max-width:620px;background:#fff;padding:40px;border-radius:24px;border:1px solid #e2e8f0}a{color:#0b57d0}</style>
+<div class="box"><h1>Operação temporariamente indisponível</h1><p>A assinatura deste espaço está suspensa ou cancelada. Os dados permanecem preservados; regularize a conta com o administrador do serviço.</p><p><a href="<?= e(url('billing/index.php')) ?>">Ver assinatura</a> · <a href="<?= e(url('logout.php')) ?>">Sair</a></p></div></html>

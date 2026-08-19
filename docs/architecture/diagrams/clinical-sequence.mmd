@@ -1,0 +1,14 @@
+sequenceDiagram
+  participant P as Psicólogo
+  participant A as Auth/RBAC
+  participant T as Tenant Scope
+  participant C as Crypto
+  participant D as MySQL
+  P->>A: abrir paciente
+  A-->>P: permission + role
+  P->>T: patient_id + tenant_id
+  T->>D: consulta escopada
+  D-->>T: paciente
+  P->>C: salvar SOAP
+  C-->>P: content_enc
+  P->>D: INSERT tenant_id + content_enc

@@ -1,0 +1,23 @@
+<?php
+declare(strict_types=1);
+require dirname(__DIR__).'/app/bootstrap.php';
+$user=require_permission('dashboard.view');
+\App\Core\Tenant::enforceActive((int)$user['tenant_id']);
+$t=(int)$user['tenant_id'];
+$today=date('Y-m-d');
+$agendaScope='';$params=['t'=>$t,'d'=>$today];
+if(in_array($user['role_slug'],['psychologist','supervised'],true)){$agendaScope=' AND a.professional_id=:u';$params['u']=$user['id'];}
+$st=db()->prepare("SELECT COUNT(*) FROM appointments a WHERE a.tenant_id=:t AND DATE(a.starts_at)=:d{$agendaScope}");$st->execute($params);$todayCount=(int)$st->fetchColumn();
+$st=db()->prepare("SELECT COUNT(*) FROM appointments a WHERE a.tenant_id=:t AND DATE(a.starts_at)=:d AND a.status='confirmed'{$agendaScope}");$st->execute($params);$confirmed=(int)$st->fetchColumn();
+$st=db()->prepare("SELECT a.*,p.name patient_name,u.name professional_name FROM appointments a JOIN patients p ON p.id=a.patient_id AND p.tenant_id=a.tenant_id JOIN users u ON u.id=a.professional_id AND u.tenant_id=a.tenant_id WHERE a.tenant_id=:t AND DATE(a.starts_at)=:d{$agendaScope} ORDER BY a.starts_at LIMIT 12");$st->execute($params);$appointments=$st->fetchAll();
+$monthIncome=null;
+if(\App\Core\Rbac::allows((int)$user['id'],'finance.view')){$st=db()->prepare("SELECT COALESCE(SUM(amount),0) FROM financial_transactions WHERE tenant_id=:t AND type='income' AND status='paid' AND YEAR(COALESCE(paid_at,created_at))=YEAR(CURDATE()) AND MONTH(COALESCE(paid_at,created_at))=MONTH(CURDATE())");$st->execute(['t'=>$t]);$monthIncome=(float)$st->fetchColumn();}
+$pendingClinical=null;
+if(\App\Core\Rbac::allows((int)$user['id'],'clinical.view') && !empty($user['professional_crp'])){$st=db()->prepare("SELECT COUNT(*) FROM clinical_records WHERE tenant_id=:t AND (professional_id=:professional_id OR supervisor_id=:supervisor_id) AND status IN ('draft','pending_approval')");$st->execute(['t'=>$t,'professional_id'=>$user['id'],'supervisor_id'=>$user['id']]);$pendingClinical=(int)$st->fetchColumn();}
+$st=db()->prepare("SELECT COUNT(*) FROM patients WHERE tenant_id=:t AND status='active'");$st->execute(['t'=>$t]);$activePatients=(int)$st->fetchColumn();
+layout('Painel',function()use($todayCount,$confirmed,$monthIncome,$pendingClinical,$activePatients,$appointments,$user){?>
+<div class="page-head"><div><span class="eyebrow">Visão de hoje</span><h1>Olá, <?=e(explode(' ',$user['name'])[0])?>.</h1><p><?=e(date('d/m/Y'))?> · acompanhe o essencial sem expor informação clínica desnecessária.</p></div><div class="split-actions"><?php if(\App\Core\Rbac::allows((int)$user['id'],'agenda.manage')):?><a class="button" href="<?=e(url('agenda/new.php'))?>">+ Novo atendimento</a><?php endif?></div></div>
+<div class="kpi-grid"><div class="kpi"><small>Atendimentos hoje</small><strong><?=$todayCount?></strong></div><div class="kpi"><small>Confirmados</small><strong><?=$confirmed?></strong></div><div class="kpi"><small>Pacientes ativos</small><strong data-private><?=$activePatients?></strong></div><div class="kpi"><small><?= $monthIncome!==null?'Receita recebida no mês':'Pendências clínicas' ?></small><strong data-private><?= $monthIncome!==null?'R$ '.number_format($monthIncome,2,',','.'):(string)($pendingClinical??'—') ?></strong></div></div>
+<div class="grid-2"><section class="card"><div class="page-head"><div><h2>Atendimentos do dia</h2><p>Ordem cronológica.</p></div><a class="button ghost small" href="<?=e(url('agenda/index.php'))?>">Abrir agenda</a></div><div class="table-wrap"><table class="table"><thead><tr><th>Hora</th><th>Paciente</th><th>Profissional</th><th>Status</th><th>Modalidade</th></tr></thead><tbody><?php if(!$appointments):?><tr><td colspan="5" class="muted">Nenhum atendimento hoje.</td></tr><?php endif?><?php foreach($appointments as $a):?><tr><td><?=e(date('H:i',strtotime($a['starts_at'])))?></td><td data-private><?=e($a['patient_name'])?></td><td><?=e($a['professional_name'])?></td><td><span class="status <?=e($a['status'])?>"><?=e($a['status'])?></span></td><td><?=e($a['modality']==='online'?'On-line':'Presencial')?></td></tr><?php endforeach?></tbody></table></div></section>
+<section class="card ai-widget"><div class="ai-glow"></div><span class="eyebrow">Copiloto clínico</span><h2>Assistência com revisão humana.</h2><p class="muted">Estruture notas SOAP, consulte sua base científica e faça auditorias formais sem enviar identificadores diretos do paciente.</p><?php if(\App\Core\Rbac::allows((int)$user['id'],'ai.use')):?><a class="button" href="<?=e(url('ai/index.php'))?>">Abrir Copiloto IA</a><?php else:?><span class="status">Disponível para perfis clínicos</span><?php endif?></section></div>
+<?php },['active'=>'dashboard']);

@@ -1,0 +1,3 @@
+<!doctype html><html lang="pt-BR"><meta charset="utf-8"><title>Acesso negado</title>
+<style>body{font-family:system-ui;margin:0;display:grid;place-items:center;min-height:100vh;background:#f7f9fc;color:#162033}.box{max-width:560px;background:#fff;padding:40px;border-radius:24px;border:1px solid #e2e8f0}a{color:#0b57d0}</style>
+<div class="box"><h1>Acesso restrito</h1><p>Seu perfil não possui permissão para esta área. O bloqueio é intencional para manter a segregação de dados administrativos, financeiros e clínicos.</p><p><a href="<?= e(url('dashboard/index.php')) ?>">Voltar ao painel</a></p></div></html>
